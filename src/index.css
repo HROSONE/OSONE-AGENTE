@@ -1,0 +1,17 @@
+@import "tailwindcss";
+
+@layer base {
+  body {
+    background-color: #E4E3E0;
+    color: #141414;
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+  }
+}
+
+.font-serif {
+  font-family: 'Instrument Serif', Georgia, serif !important;
+}
+
+.font-mono {
+  font-family: 'JetBrains Mono', monospace !important;
+}

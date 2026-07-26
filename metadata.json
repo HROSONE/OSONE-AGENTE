@@ -1,0 +1,6 @@
+{
+  "name": "OSONE Local Agent",
+  "description": "Agente local standalone em Node.js para abertura segura de aplicativos e organização de arquivos, com painel web OSONE.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
