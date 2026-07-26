@@ -1,4 +1,6 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 @layer base {
   body {
@@ -7,11 +9,9 @@
     font-family: 'Space Grotesk', system-ui, sans-serif;
   }
 }
-
 .font-serif {
   font-family: 'Instrument Serif', Georgia, serif !important;
 }
-
 .font-mono {
   font-family: 'JetBrains Mono', monospace !important;
 }
