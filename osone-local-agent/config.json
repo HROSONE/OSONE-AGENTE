@@ -1,7 +1,7 @@
 {
   "port": 9123,
-  "token": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
-  "allowedOrigin": "*",
+  "token": "f3a9c1e7b2d4568091a2b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f70",
+  "allowedOrigin": "http://localhost:5173",
   "apps": {
     "spotify": {
       "win32": "start spotify:",
@@ -14,10 +14,6 @@
     "filemanager": {
       "win32": "explorer",
       "linux": "xdg-open ."
-    },
-    "terminal": {
-      "win32": "start cmd",
-      "linux": "gnome-terminal"
     },
     "browser": {
       "win32": "start https://google.com",
