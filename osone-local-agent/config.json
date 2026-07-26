@@ -1,7 +1,7 @@
 {
   "port": 9123,
   "token": "",
-  "allowedOrigin": "http://localhost:5173",
+"allowedOrigin": "http://localhost:3000",
   "apps": {
     "spotify": {
       "win32": "start spotify:",
