@@ -1,6 +1,6 @@
 {
   "port": 9123,
-  "token": "f3a9c1e7b2d4568091a2b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f70",
+  "token": "",
   "allowedOrigin": "http://localhost:5173",
   "apps": {
     "spotify": {
