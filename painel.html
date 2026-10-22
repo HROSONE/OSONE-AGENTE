@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OSONE AGENTE</title>
+<style>
+  :root { --fundo: #0f1115; --cartao: #181b22; --borda: #2a2f3a; --texto: #e6e8ee; --fraco: #8b93a5; --acento: #4f8cff; --ok: #3ecf8e; --erro: #ff6b6b; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 14px/1.5 system-ui, sans-serif; background: var(--fundo); color: var(--texto); }
+  main { max-width: 980px; margin: 0 auto; padding: 24px 16px 64px; }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  p.sub { color: var(--fraco); margin: 0 0 20px; }
+  .grade { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; }
+  section { background: var(--cartao); border: 1px solid var(--borda); border-radius: 10px; padding: 14px; }
+  h2 { font-size: 14px; margin: 0 0 10px; color: var(--fraco); text-transform: uppercase; letter-spacing: .05em; }
+  input, select, textarea, button { font: inherit; color: inherit; background: #0b0d11; border: 1px solid var(--borda); border-radius: 6px; padding: 6px 8px; }
+  input, textarea, select { width: 100%; }
+  textarea { min-height: 60px; resize: vertical; }
+  button { background: var(--acento); border-color: var(--acento); color: #fff; cursor: pointer; }
+  button.secundario { background: transparent; color: var(--texto); }
+  .linha { display: flex; gap: 6px; margin-bottom: 6px; align-items: center; }
+  .linha > * { flex: 1; }
+  .linha > button { flex: 0 0 auto; }
+  #saida { white-space: pre-wrap; word-break: break-word; font: 12px/1.45 ui-monospace, monospace; max-height: 320px; overflow: auto; margin: 0; }
+  #estado { font-size: 13px; }
+  .ok { color: var(--ok); } .erro { color: var(--erro); }
+  img { max-width: 100%; border-radius: 6px; margin-top: 8px; border: 1px solid var(--borda); }
+</style>
+</head>
+<body>
+<main>
+  <h1>OSONE AGENTE</h1>
+  <p class="sub">Painel de teste. Tudo o que você faz aqui acontece de verdade neste computador.</p>
+
+  <section style="margin-bottom:12px">
+    <h2>Conexão</h2>
+    <div class="linha">
+      <input id="token" type="password" placeholder="Token (aparece ao iniciar o agente: node agente.js --token)" autocomplete="off">
+      <button id="conectar">Conectar</button>
+    </div>
+    <div id="estado">Desconectado.</div>
+  </section>
+
+  <div class="grade">
+    <section>
+      <h2>Apps</h2>
+      <div class="linha"><input id="app" placeholder="calculadora, firefox, https://..."><button data-acao="abrir">Abrir</button></div>
+      <div class="linha"><input id="appFechar" placeholder="nome do app"><button data-acao="fechar">Fechar</button></div>
+      <button class="secundario" data-acao="listarApps">Listar instalados</button>
+    </section>
+
+    <section>
+      <h2>Mouse</h2>
+      <div class="linha"><input id="mx" type="number" placeholder="x"><input id="my" type="number" placeholder="y"></div>
+      <div class="linha">
+        <button data-acao="mover">Mover</button>
+        <button data-acao="clicar">Clicar</button>
+        <button data-acao="direito" class="secundario">Direito</button>
+        <button data-acao="posicao" class="secundario">Posição</button>
+      </div>
+      <div class="linha"><button data-acao="rolarCima" class="secundario">Rolar ↑</button><button data-acao="rolarBaixo" class="secundario">Rolar ↓</button></div>
+    </section>
+
+    <section>
+      <h2>Teclado</h2>
+      <p class="sub" style="margin:0 0 6px">O texto vai para a janela em foco — o atraso de 3 s dá tempo de clicar nela.</p>
+      <textarea id="texto" placeholder="Olá, AÇÃO ✓"></textarea>
+      <div class="linha" style="margin-top:6px"><button data-acao="digitar">Digitar em 3 s</button></div>
+      <div class="linha"><input id="tecla" placeholder="ctrl+c, alt+tab, enter, win"><button data-acao="tecla">Apertar em 3 s</button></div>
+    </section>
+
+    <section>
+      <h2>Janelas e tela</h2>
+      <div class="linha"><button data-acao="janelas" class="secundario">Listar janelas</button><button data-acao="tela" class="secundario">Ver tela</button></div>
+      <div class="linha"><input id="janela" placeholder="id da janela"><button data-acao="focar">Focar</button></div>
+    </section>
+
+    <section>
+      <h2>Terminal</h2>
+      <textarea id="comando" placeholder="Get-Process | Select -First 5   ·   ls -la ~"></textarea>
+      <div class="linha" style="margin-top:6px"><button data-acao="terminal">Executar</button></div>
+    </section>
+  </div>
+
+  <section style="margin-top:12px">
+    <h2>Resposta</h2>
+    <pre id="saida">—</pre>
+    <div id="imagem"></div>
+  </section>
+</main>
+<script>
+  const $ = id => document.getElementById(id);
+  // sessionStorage: o token some ao fechar a aba. localStorage o deixaria gravado no perfil do navegador.
+  try { $('token').value = sessionStorage.getItem('osone-agente-token') || ''; } catch {}
+
+  async function pedir(metodo, rota, corpo) {
+    const resposta = await fetch(rota, {
+      method: metodo,
+      headers: { Authorization: 'Bearer ' + $('token').value.trim(), ...(corpo ? { 'Content-Type': 'application/json' } : {}) },
+      body: corpo ? JSON.stringify(corpo) : undefined
+    });
+    const dados = await resposta.json().catch(() => ({ ok: false, erro: 'Resposta não é JSON (HTTP ' + resposta.status + ')' }));
+    if (!resposta.ok || dados.ok === false) throw new Error(dados.erro || 'HTTP ' + resposta.status);
+    return dados;
+  }
+
+  function mostrar(dados, erro) {
+    $('imagem').innerHTML = '';
+    if (erro) { $('saida').innerHTML = ''; $('saida').append(Object.assign(document.createElement('span'), { className: 'erro', textContent: erro.message })); return; }
+    const copia = { ...dados };
+    if (copia.base64) {
+      const img = document.createElement('img');
+      img.src = 'data:image/png;base64,' + copia.base64;
+      $('imagem').append(img);
+      copia.base64 = '(' + copia.base64.length + ' caracteres base64)';
+    }
+    $('saida').textContent = JSON.stringify(copia, null, 2);
+  }
+
+  const espera = ms => new Promise(r => setTimeout(r, ms));
+  const coordenadas = () => ({ x: Number($('mx').value), y: Number($('my').value) });
+
+  const acoes = {
+    abrir: () => pedir('POST', '/open-app', { appName: $('app').value }),
+    fechar: () => pedir('POST', '/close-app', { appName: $('appFechar').value }),
+    listarApps: () => pedir('GET', '/apps'),
+    mover: () => pedir('POST', '/mouse/move', coordenadas()),
+    clicar: () => pedir('POST', '/mouse/click-at', coordenadas()),
+    direito: () => pedir('POST', '/mouse/click-at', { ...coordenadas(), button: 'right' }),
+    posicao: async () => { const p = await pedir('GET', '/mouse/position'); $('mx').value = p.x; $('my').value = p.y; return p; },
+    rolarCima: () => pedir('POST', '/mouse/scroll', { direction: 'up', amount: 3 }),
+    rolarBaixo: () => pedir('POST', '/mouse/scroll', { direction: 'down', amount: 3 }),
+    digitar: async () => { await espera(3000); return pedir('POST', '/keyboard/type', { text: $('texto').value }); },
+    tecla: async () => { await espera(3000); return pedir('POST', '/keyboard/key', { key: $('tecla').value }); },
+    janelas: () => pedir('GET', '/window/list'),
+    focar: () => pedir('POST', '/window/focus', { id: $('janela').value }),
+    tela: () => pedir('GET', '/screen/capture'),
+    terminal: () => pedir('POST', '/exec', { command: $('comando').value })
+  };
+
+  document.addEventListener('click', async evento => {
+    const acao = evento.target.dataset && evento.target.dataset.acao;
+    if (!acao) return;
+    $('saida').textContent = 'Executando…';
+    try { mostrar(await acoes[acao]()); } catch (e) { mostrar(null, e); }
+  });
+
+  $('conectar').addEventListener('click', async () => {
+    try { sessionStorage.setItem('osone-agente-token', $('token').value.trim()); } catch {}
+    try {
+      const s = await pedir('GET', '/status');
+      $('estado').innerHTML = '';
+      $('estado').append(Object.assign(document.createElement('span'), {
+        className: s.entrada.motor ? 'ok' : 'erro',
+        textContent: `Conectado · ${s.nome} ${s.versao} · ${s.sistema} (${s.sessao}) · entrada: ${s.entrada.motor || s.entrada.motivo}`
+      }));
+      mostrar(s);
+    } catch (e) {
+      $('estado').innerHTML = '';
+      $('estado').append(Object.assign(document.createElement('span'), { className: 'erro', textContent: e.message }));
+    }
+  });
+  if ($('token').value) $('conectar').click();
+</script>
+</body>
+</html>
