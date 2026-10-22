@@ -1,8 +1,7 @@
 node_modules/
-build/
-dist/
-coverage/
 .DS_Store
-*.log
-.env*
-!.env.example
+# Gerados ao rodar: o config.json guarda o token, e o token dá controle do computador.
+config.json
+audit.log
+audit.log.1
+lixeira/

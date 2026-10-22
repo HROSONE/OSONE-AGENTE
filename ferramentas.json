@@ -1,0 +1,184 @@
+{
+  "versao": "2.0.0",
+  "comoUsar": "Declare as funções de 'ferramentas' no seu modelo (Gemini functionDeclarations, OpenAI tools[].function, Anthropic tools com input_schema = parameters). Quando o modelo chamar uma, envie POST /ferramenta {\"nome\": <name>, \"args\": <arguments>} ao agente com o token, e devolva a resposta ao modelo.",
+  "ferramentas": [
+    {
+      "name": "abrir_app",
+      "description": "Abre um aplicativo instalado pelo nome (ex.: 'spotify', 'calculadora', 'vs code'), um site (URL) ou um arquivo/pasta (caminho).",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "appName": { "type": "string", "description": "Nome do app, URL ou caminho." },
+          "path": { "type": "string", "description": "Opcional: arquivo ou URL para o app abrir." }
+        },
+        "required": ["appName"]
+      }
+    },
+    {
+      "name": "fechar_app",
+      "description": "Fecha um aplicativo aberto pelo nome do processo ou da janela. Processos do sistema são protegidos.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "appName": { "type": "string" },
+          "force": { "type": "boolean", "description": "Encerrar à força (perde o que não foi salvo). Padrão: false." }
+        },
+        "required": ["appName"]
+      }
+    },
+    {
+      "name": "listar_apps",
+      "description": "Lista os aplicativos instalados que podem ser abertos pelo nome.",
+      "parameters": { "type": "object", "properties": {} }
+    },
+    {
+      "name": "ver_tela",
+      "description": "Captura a tela inteira (PNG em base64). Use antes de clicar para saber as coordenadas.",
+      "parameters": { "type": "object", "properties": {} }
+    },
+    {
+      "name": "tamanho_da_tela",
+      "description": "Largura e altura da tela, em pixels.",
+      "parameters": { "type": "object", "properties": {} }
+    },
+    {
+      "name": "clicar",
+      "description": "Move o mouse até (x, y) e clica.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "x": { "type": "number" },
+          "y": { "type": "number" },
+          "button": { "type": "string", "enum": ["left", "right", "middle"] },
+          "double": { "type": "boolean", "description": "Clique duplo." }
+        },
+        "required": ["x", "y"]
+      }
+    },
+    {
+      "name": "mover_mouse",
+      "description": "Move o ponteiro até (x, y) sem clicar.",
+      "parameters": {
+        "type": "object",
+        "properties": { "x": { "type": "number" }, "y": { "type": "number" } },
+        "required": ["x", "y"]
+      }
+    },
+    {
+      "name": "rolar",
+      "description": "Rola a roda do mouse, opcionalmente sobre o ponto (x, y).",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "direction": { "type": "string", "enum": ["up", "down", "left", "right"] },
+          "amount": { "type": "number", "description": "Entalhes da roda (1 a 50). Padrão: 3." },
+          "x": { "type": "number" },
+          "y": { "type": "number" }
+        },
+        "required": ["direction"]
+      }
+    },
+    {
+      "name": "arrastar",
+      "description": "Arrasta com o botão pressionado de (xDe, yDe) até (xPara, yPara).",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "xDe": { "type": "number" }, "yDe": { "type": "number" },
+          "xPara": { "type": "number" }, "yPara": { "type": "number" },
+          "button": { "type": "string", "enum": ["left", "right", "middle"] }
+        },
+        "required": ["xDe", "yDe", "xPara", "yPara"]
+      }
+    },
+    {
+      "name": "digitar",
+      "description": "Digita um texto (com acentos e emoji) na janela em foco. Use \\n para Enter.",
+      "parameters": {
+        "type": "object",
+        "properties": { "text": { "type": "string" } },
+        "required": ["text"]
+      }
+    },
+    {
+      "name": "tecla",
+      "description": "Pressiona uma tecla ou atalho: 'enter', 'esc', 'tab', 'ctrl+c', 'alt+f4', 'ctrl+shift+t', 'win', 'f5', 'volumeup'...",
+      "parameters": {
+        "type": "object",
+        "properties": { "key": { "type": "string" } },
+        "required": ["key"]
+      }
+    },
+    {
+      "name": "listar_janelas",
+      "description": "Lista as janelas abertas (id, título, se está ativa).",
+      "parameters": { "type": "object", "properties": {} }
+    },
+    {
+      "name": "focar_janela",
+      "description": "Traz uma janela para a frente pelo id de listar_janelas.",
+      "parameters": {
+        "type": "object",
+        "properties": { "id": { "type": "string" } },
+        "required": ["id"]
+      }
+    },
+    {
+      "name": "fechar_janela",
+      "description": "Fecha uma janela como o botão X (o app ainda pode pedir para salvar).",
+      "parameters": {
+        "type": "object",
+        "properties": { "id": { "type": "string" } },
+        "required": ["id"]
+      }
+    },
+    {
+      "name": "terminal",
+      "description": "Roda um comando no PowerShell (Windows) ou bash (Linux) e devolve a saída. Comandos destrutivos são recusados.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "command": { "type": "string" },
+          "cwd": { "type": "string", "description": "Pasta onde rodar." },
+          "timeoutMs": { "type": "number", "description": "Prazo em ms (padrão 30000)." }
+        },
+        "required": ["command"]
+      }
+    },
+    {
+      "name": "planejar_organizacao",
+      "description": "Mostra como uma pasta permitida (downloads, desktop, documents) seria organizada por tipo de arquivo, sem mover nada.",
+      "parameters": {
+        "type": "object",
+        "properties": { "folderKey": { "type": "string" } },
+        "required": ["folderKey"]
+      }
+    },
+    {
+      "name": "organizar",
+      "description": "Executa um plano de planejar_organizacao. Só depois de a pessoa confirmar.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "folderKey": { "type": "string" },
+          "plan": { "type": "array", "items": { "type": "object", "properties": { "file": { "type": "string" } } } },
+          "confirmed": { "type": "boolean" }
+        },
+        "required": ["folderKey", "plan", "confirmed"]
+      }
+    },
+    {
+      "name": "mandar_para_lixeira",
+      "description": "Move um arquivo de uma pasta permitida para a lixeira do agente (nada é apagado). Só depois de a pessoa confirmar.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "folderKey": { "type": "string" },
+          "fileName": { "type": "string" },
+          "confirmed": { "type": "boolean" }
+        },
+        "required": ["folderKey", "fileName", "confirmed"]
+      }
+    }
+  ]
+}
